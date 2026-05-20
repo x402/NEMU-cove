@@ -18,6 +18,7 @@
 #include <memory/paddr.h>
 #include <memory/sparseram.h>
 #include "local-include/csr.h"
+#include "local-include/mpt-cache.h"
 
 void init_csr();
 #ifdef CONFIG_RV_SDTRIG
@@ -50,6 +51,8 @@ void init_isa() {
   init_csr();
 
   init_custom_csr();
+
+  IFDEF(CONFIG_RV_SMMTT, mptc_init());
 
 #ifndef CONFIG_RESET_FROM_MMIO
   cpu.pc = RESET_VECTOR;

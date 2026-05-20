@@ -25,6 +25,7 @@
 #include "../local-include/intr.h"
 #include "../local-include/trigger.h"
 #include "../local-include/aia.h"
+#include "../local-include/mpt-cache.h"
 
 int update_mmu_state();
 uint64_t get_htime();
@@ -2341,6 +2342,43 @@ static void csr_write(uint32_t csrid, word_t src) {
       }
       break;
 
+#ifdef CONFIG_RV_SMMTT
+    case CSR_MMPT:
+    {
+      mmpt_t new_val;
+      new_val.val = src;
+      if (new_val.mode > 3) {
+        new_val.mode = mmpt->mode;
+      }
+      if (new_val.mode == 0) {
+        new_val.sdid = 0;
+        new_val.ppn = 0;
+        new_val.pad0 = 0;
+        new_val.pad1 = 0;
+        new_val.pad2 = 0;
+      }
+      new_val.pad0 = 0;
+      new_val.pad1 = 0;
+      new_val.pad2 = 0;
+      if (new_val.mode == 3) {
+        new_val.ppn &= ~0x7ULL;
+      }
+      mmpt->val = new_val.val;
+      mptc_flush();
+      break;
+    }
+    case CSR_MSDCFG:
+    {
+      msdcfg_t new_val;
+      new_val.val = src;
+      new_val.wpri0 = 0;
+      new_val.wpri1 = 0;
+      new_val.pad0 = 0;
+      msdcfg->val = new_val.val;
+      break;
+    }
+#endif // CONFIG_RV_SMMTT
+
 #ifdef CONFIG_RV_SMSTATEEN
     case CSR_MSTATEEN0: *dest = src & MSTATEEN0_WMASK; break;
     case CSR_MSTATEEN1 ... CSR_MSTATEEN3: *dest = src & MSTATEENX_WMASK; break;
@@ -3389,7 +3427,26 @@ void riscv64_priv_sfence_vma(vaddr_t vaddr, word_t asid) {
     longjmp_exception(EX_II);
 #endif // CONFIG_RVH
   mmu_tlb_flush(vaddr);
+  IFDEF(CONFIG_RV_SMMTT, mptc_flush());
 }
+
+#ifdef CONFIG_RV_SMMTT
+void riscv64_priv_mfence_pa(vaddr_t paddr, word_t sdid) {
+  if (cpu.mode != MODE_M) {
+    longjmp_exception(EX_II);
+  }
+  mptc_flush();
+}
+
+#ifdef CONFIG_RV_SVINVAL
+void riscv64_priv_minval_pa(vaddr_t paddr, word_t sdid) {
+  if (cpu.mode != MODE_M) {
+    longjmp_exception(EX_II);
+  }
+  mptc_flush();
+}
+#endif // CONFIG_RV_SVINVAL
+#endif // CONFIG_RV_SMMTT
 
 #ifdef CONFIG_RVH
 /// @brief Do RISC-V 64 privileged instruction: hfence.vvma
@@ -3400,6 +3457,7 @@ void riscv64_priv_hfence_vvma(vaddr_t vaddr, word_t asid) {
   if(cpu.v) longjmp_exception(EX_VI);
   if(!cpu.v && cpu.mode == MODE_U) longjmp_exception(EX_II);
   mmu_tlb_flush(vaddr);
+  IFDEF(CONFIG_RV_SMMTT, mptc_flush());
 }
 
 /// @brief Do RISC-V 64 privileged instruction: hfence.gvma
@@ -3410,6 +3468,7 @@ void riscv64_priv_hfence_gvma(vaddr_t vaddr, word_t vmid) {
   if(cpu.v) longjmp_exception(EX_VI);
   if(!cpu.v && (cpu.mode == MODE_U || (cpu.mode == MODE_S && mstatus->tvm))) longjmp_exception(EX_II);
   mmu_tlb_flush(vaddr);
+  IFDEF(CONFIG_RV_SMMTT, mptc_flush());
 }
 #endif // CONFIG_RVH
 

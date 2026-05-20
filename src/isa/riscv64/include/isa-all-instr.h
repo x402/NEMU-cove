@@ -110,6 +110,20 @@
   SYS_SVINVAL_INSTR_TERNARY(f) \
   SYS_RVH_INSTR_TERNARY(f)
 
+#ifdef CONFIG_RV_SMMTT
+  #define SYS_SMMTT_INSTR_TERNARY(f) \
+    f(mfence_pa)
+  #ifdef CONFIG_RV_SVINVAL
+    #define SYS_SMMTT_SVINVAL_INSTR_TERNARY(f) \
+      f(minval_pa)
+  #else
+    #define SYS_SMMTT_SVINVAL_INSTR_TERNARY(f)
+  #endif
+#else
+  #define SYS_SMMTT_INSTR_TERNARY(f)
+  #define SYS_SMMTT_SVINVAL_INSTR_TERNARY(f)
+#endif
+
 
 /********************** SYS INSTR TERNARY CSR (csr) **********************/
 
@@ -393,6 +407,8 @@
   AMO_INSTR_TERNARY(f) \
   AMO_CAS_INSTR(f) \
   SYS_INSTR_TERNARY(f) \
+  SYS_SMMTT_INSTR_TERNARY(f) \
+  SYS_SMMTT_SVINVAL_INSTR_TERNARY(f) \
   FLOAT_INSTR_TERNARY(f) \
   BITMANIP_INSTR_TERNARY(f) \
   CRYPTO_INSTR_TERNARY(f) \

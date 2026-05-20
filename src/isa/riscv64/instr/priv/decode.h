@@ -81,6 +81,14 @@ def_THelper(priv) {
   #endif // CONFIG_RVH
 #endif // CONFIG_RV_SVINVAL
 
+#ifdef CONFIG_RV_SMMTT
+  // func7 TBD per spec v0.49 Draft; 0001110/0001111 are tentative
+  def_INSTR_IDTAB("0001110 ????? ????? ??? 00000 ????? ??", R  , mfence_pa);
+#ifdef CONFIG_RV_SVINVAL
+  def_INSTR_IDTAB("0001111 ????? ????? ??? 00000 ????? ??", R  , minval_pa);
+#endif // CONFIG_RV_SVINVAL
+#endif // CONFIG_RV_SMMTT
+
   return EXEC_ID_inv;
 }
 

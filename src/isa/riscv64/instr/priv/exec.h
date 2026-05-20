@@ -115,6 +115,20 @@ def_EHelper(hinval_gvma) {
 #endif // CONFIG_RVH
 #endif // CONFIG_RV_SVINVAL
 
+#ifdef CONFIG_RV_SMMTT
+def_EHelper(mfence_pa) {
+  riscv64_priv_mfence_pa(*dsrc1, *dsrc2);
+  rtl_priv_next(s);
+}
+
+#ifdef CONFIG_RV_SVINVAL
+def_EHelper(minval_pa) {
+  riscv64_priv_minval_pa(*dsrc1, *dsrc2);
+  rtl_priv_next(s);
+}
+#endif // CONFIG_RV_SVINVAL
+#endif // CONFIG_RV_SMMTT
+
 #ifdef CONFIG_RV_ZIMOP
 // EHelpers for Zimop Instructions
 

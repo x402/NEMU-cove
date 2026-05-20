@@ -2586,6 +2586,7 @@
 #define CSR_MSTATEEN2 0x30e
 #define CSR_MSTATEEN3 0x30f
 #define CSR_MCOUNTINHIBIT 0x320
+#define CSR_MMPT 0x382
 #define CSR_MSCRATCH 0x340
 #define CSR_MEPC 0x341
 #define CSR_MCAUSE 0x342
@@ -2683,6 +2684,7 @@
 #define CSR_PMPADDR62 0x3ee
 #define CSR_PMPADDR63 0x3ef
 #define CSR_MSECCFG 0x747
+#define CSR_MSDCFG 0x74E
 #define CSR_TSELECT 0x7a0
 #define CSR_TDATA1 0x7a1
 #define CSR_TDATA2 0x7a2

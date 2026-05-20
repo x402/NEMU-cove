@@ -623,6 +623,13 @@ config PMPTABLE_EXTENSION
   bool "Enable PMPTable extension"
   default n
 
+config RV_SMMTT
+  bool "RISC-V Smmtt Supervisor Domains Access Protection Extension (Draft v0.49)"
+  default n
+  help
+    This option enables the Smmtt extension for supervisor domain
+    memory protection via Machine Protection Tables (MPT).
+
 config RVV_AGNOSTIC
   depends on RVV
   bool "Enable RVV agnostic policy"

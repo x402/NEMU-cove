@@ -573,6 +573,14 @@
   #define CSRS_M_SMRNMI(f)
 #endif //CONFIG_RV_SMRNMI
 
+#ifdef CONFIG_RV_SMMTT
+#define CSRS_M_SMMTT(f) \
+  f(mmpt       , 0x382) \
+  f(msdcfg     , 0x74E)
+#else
+#define CSRS_M_SMMTT(f)
+#endif // CONFIG_RV_SMMTT
+
 /** ALL **/
 #define CSRS_M(f) \
   CSRS_M_INFOMATION(f) \
@@ -590,6 +598,7 @@
   CSRS_M_CSRIND(f) \
   CSRS_M_CSRIND_SUB(f) \
   CSRS_M_SMRNMI(f) \
+  CSRS_M_SMMTT(f) \
   CSRS_DEBUG_MODE(f) \
   CSRS_M_CUSTOM(f)
 
@@ -876,6 +885,30 @@ CSR_STRUCT_START(mseccfg)
   uint64_t pmm   : 2; // [33:32]
   uint64_t pad2  :30; // [63:34]
 CSR_STRUCT_END(mseccfg)
+
+#ifdef CONFIG_RV_SMMTT
+CSR_STRUCT_START(mmpt)
+  uint64_t ppn     : 44; // [43:0]
+  uint64_t pad0    :  8; // [51:44]
+  uint64_t sdid    :  6; // [57:52]
+  uint64_t pad1    :  1; // [58]
+  uint64_t pad2    :  1; // [59]
+  uint64_t mode    :  4; // [63:60]
+CSR_STRUCT_END(mmpt)
+
+CSR_STRUCT_START(msdcfg)
+  uint64_t sidn    :  6; // [5:0]
+  uint64_t seda    :  1; // [6]
+  uint64_t seta    :  1; // [7]
+  uint64_t wpri0   :  8; // [15:8]
+  uint64_t wpri1   :  6; // [21:16]
+  uint64_t ssrm    :  1; // [22]
+  uint64_t ssmm    :  1; // [23]
+  uint64_t srl     :  4; // [27:24]
+  uint64_t sml     :  4; // [31:28]
+  uint64_t pad0    : 32; // [63:32]
+CSR_STRUCT_END(msdcfg)
+#endif // CONFIG_RV_SMMTT
 
 #ifdef CONFIG_RV_SMSTATEEN
   CSR_STRUCT_START(mstateen0)
