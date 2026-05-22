@@ -1,7 +1,3 @@
-/***************************************************************************************
-* Test framework header for Smmtt extension testing
-***************************************************************************************/
-
 #ifndef __TEST_MAIN_H__
 #define __TEST_MAIN_H__
 
@@ -28,62 +24,6 @@ void putc(char c);
 void puts(const char *s);
 void puthex(uint64_t v);
 
-#define TEST(name, body) do { \
-    total_tests++; \
-    got_trap = 0; \
-    got_mcause = 0; \
-    body; \
-    if (!got_trap) { \
-        report_pass(name); \
-        passed_tests++; \
-    } else { \
-        report_fail(name, "unexpected trap"); \
-        failed_tests++; \
-    } \
-} while (0)
-
-#define TEST_TRAP(name, expected_cause, body) do { \
-    total_tests++; \
-    got_trap = 0; \
-    got_mcause = 0; \
-    body; \
-    if (got_trap && got_mcause == (expected_cause)) { \
-        report_pass(name); \
-        passed_tests++; \
-    } else { \
-        report_fail(name, "trap mismatch"); \
-        failed_tests++; \
-    } \
-} while (0)
-
-#define STEST(name, body) do { \
-    total_tests++; \
-    got_trap = 0; \
-    got_mcause = 0; \
-    body; \
-    if (!got_trap) { \
-        report_pass(name); \
-        passed_tests++; \
-    } else { \
-        report_fail(name, "unexpected S-mode trap"); \
-        failed_tests++; \
-    } \
-} while (0)
-
-#define STEST_TRAP(name, expected_cause, body) do { \
-    total_tests++; \
-    got_trap = 0; \
-    got_mcause = 0; \
-    body; \
-    if (got_trap && got_mcause == (expected_cause)) { \
-        report_pass(name); \
-        passed_tests++; \
-    } else { \
-        report_fail(name, "S-mode trap mismatch"); \
-        failed_tests++; \
-    } \
-} while (0)
-
 #define ASSERT(cond) do { if (!(cond)) { \
     report_fail("assertion", #cond); \
     failed_tests++; \
@@ -98,13 +38,52 @@ extern volatile uint64_t mpt_root[];
 extern volatile uint64_t mpt_l2[];
 extern volatile uint64_t mpt_leaf[];
 
-void test_csr_mmpt(void);
-void test_csr_msdcfg(void);
-void test_mpt_permissions(void);
-void test_fence_instr(void);
-void test_mpt_cache(void);
-void test_boundary(void);
+/* Modularity & Table-driven Declarations */
 
+typedef enum {
+    TEST_MODE_M = 0,
+    TEST_MODE_S = 1
+} test_priv_mode_t;
+
+typedef struct {
+    const char *name;             // E.g., "mpt_perm.01 bare mode allows access"
+    void (*fn)(void);            // Test core function
+    test_priv_mode_t run_mode;   // Mode to run in (M/S)
+    int expected_trap;           // Expected mcause (0 or negative if none)
+    void (*setup)(void);         // Setup hook (optional, can be NULL)
+    void (*teardown)(void);      // Teardown hook (optional, can be NULL)
+} test_case_t;
+
+typedef struct {
+    const char *name;            // E.g., "mpt_perm"
+    const char *description;     // Human-readable description
+    const test_case_t *cases;    // Array of test cases
+    size_t num_cases;            // Total cases count
+} test_module_t;
+
+/* DSL test-suite declaration & auto-registration macros */
+
+#define BEGIN_TEST_MODULE(mod_id) \
+    static const test_case_t mod_id##_cases[] = {
+
+#define ADD_TEST_CASE(test_fn, tc_name, priv_mode, exp_trap) \
+    { .name = tc_name, .fn = test_fn, .run_mode = priv_mode, .expected_trap = exp_trap, .setup = NULL, .teardown = NULL },
+
+#define ADD_TEST_CASE_HOOKS(test_fn, tc_name, priv_mode, exp_trap, setup_fn, teardown_fn) \
+    { .name = tc_name, .fn = test_fn, .run_mode = priv_mode, .expected_trap = exp_trap, .setup = setup_fn, .teardown = teardown_fn },
+
+#define END_TEST_MODULE(mod_id, desc_str) \
+    }; \
+    const test_module_t mod_id##_module = { \
+        .name = #mod_id, \
+        .description = desc_str, \
+        .cases = mod_id##_cases, \
+        .num_cases = sizeof(mod_id##_cases) / sizeof(test_case_t) \
+    }; \
+    const test_module_t * const __test_module_ptr_##mod_id \
+    __attribute__((used, section(".test_registry"))) = &mod_id##_module;
+
+void run_test_case(const test_case_t *tc);
 void test_main(void);
 
 #endif // __TEST_MAIN_H__

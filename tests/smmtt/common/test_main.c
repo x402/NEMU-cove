@@ -1,10 +1,10 @@
-/***************************************************************************************
-* Test framework: trap handler, S-mode switch, serial output
-***************************************************************************************/
-
 #include "test_main.h"
 
 #define SERIAL_PORT (*(volatile char *)0x310b0000)
+
+/* Linker symbols for discovery */
+extern const test_module_t * const _test_registry_start[];
+extern const test_module_t * const _test_registry_end[];
 
 int total_tests = 0;
 int passed_tests = 0;
@@ -144,26 +144,72 @@ void mpt_teardown(void) {
     write_csr(CSR_MMPT, 0);
 }
 
+void run_test_case(const test_case_t *tc) {
+    total_tests++;
+    got_trap = 0;
+    got_mcause = 0;
+
+    if (tc->setup) {
+        tc->setup();
+    }
+
+    if (tc->run_mode == TEST_MODE_S) {
+        run_in_s_mode(tc->fn);
+    } else {
+        tc->fn();
+    }
+
+    int trap_expected = (tc->expected_trap > 0);
+    int passed = 0;
+
+    if (trap_expected) {
+        if (got_trap && got_mcause == tc->expected_trap) {
+            passed = 1;
+        } else {
+            if (!got_trap) {
+                report_fail(tc->name, "expected trap but none occurred");
+            } else {
+                report_fail(tc->name, "trap mcause mismatch");
+            }
+        }
+    } else {
+        if (!got_trap) {
+            passed = 1;
+        } else {
+            report_fail(tc->name, "unexpected trap occurred");
+        }
+    }
+
+    if (passed) {
+        report_pass(tc->name);
+        passed_tests++;
+    } else {
+        failed_tests++;
+    }
+
+    if (tc->teardown) {
+        tc->teardown();
+    }
+}
+
 void test_main(void) {
-#ifdef TEST_MODULE_MMPT
-    test_csr_mmpt();
-#elif defined(TEST_MODULE_MSDCFG)
-    test_csr_msdcfg();
-#elif defined(TEST_MODULE_MPT)
-    test_mpt_permissions();
-#elif defined(TEST_MODULE_FENCE)
-    test_fence_instr();
-#elif defined(TEST_MODULE_CACHE)
-    test_mpt_cache();
-#elif defined(TEST_MODULE_BOUNDARY)
-    test_boundary();
-#else
-    test_csr_mmpt();
-    test_csr_msdcfg();
-    test_mpt_permissions();
-    test_fence_instr();
-    test_mpt_cache();
-    test_boundary();
-#endif
+    size_t num_modules = _test_registry_end - _test_registry_start;
+
+    puts("\n============================================================\n");
+    puts("            Starting Smmtt Extension Test Suite\n");
+    puts("============================================================\n");
+
+    for (size_t m = 0; m < num_modules; m++) {
+        const test_module_t *mod = _test_registry_start[m];
+
+        puts("\n------------------------------------------------------------\n");
+        puts("[MODULE] "); puts(mod->name); puts(" - "); puts(mod->description); puts("\n");
+        puts("------------------------------------------------------------\n");
+
+        for (size_t c = 0; c < mod->num_cases; c++) {
+            run_test_case(&(mod->cases[c]));
+        }
+    }
+
     print_summary();
 }
