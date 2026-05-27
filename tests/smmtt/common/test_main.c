@@ -29,6 +29,21 @@ void puthex(uint64_t v) {
     }
 }
 
+void putdec(uint64_t v) {
+    char buf[21];  /* max 20 digits for uint64_t + NUL */
+    char *p = buf + sizeof(buf) - 1;
+    *p = '\0';
+    if (v == 0) {
+        putc('0');
+        return;
+    }
+    while (v > 0) {
+        *--p = '0' + (v % 10);
+        v /= 10;
+    }
+    puts(p);
+}
+
 void report_pass(const char *name) {
     puts("[PASS] "); puts(name); putc('\n');
 }
@@ -39,9 +54,9 @@ void report_fail(const char *name, const char *reason) {
 
 void print_summary(void) {
     puts("\n========== Summary ==========\n");
-    puts("Total:  "); puthex(total_tests); puts("\n");
-    puts("Passed: "); puthex(passed_tests); puts("\n");
-    puts("Failed: "); puthex(failed_tests); puts("\n");
+    puts("Total:  "); putdec(total_tests); puts("\n");
+    puts("Passed: "); putdec(passed_tests); puts("\n");
+    puts("Failed: "); putdec(failed_tests); puts("\n");
     if (failed_tests == 0) puts("ALL TESTS PASSED\n");
     else puts("SOME TESTS FAILED\n");
     puts("=============================\n");

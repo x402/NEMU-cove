@@ -162,6 +162,7 @@
 #define MIP_MEIP            (1 << IRQ_M_EXT)
 #define MIP_SGEIP           (1 << IRQ_S_GEXT)
 #define MIP_LCOFIP          (1 << IRQ_LCOF)
+#define MIP_MSDEIP          (1 << IRQ_MSDEI)
 #define MIP_RAS_LOW_PRIO    (1ULL << IRQ_RAS_LOW_PRIO)
 #define MIP_RAS_HIGH_PRIO   (1ULL << IRQ_RAS_HIGH_PRIO)
 
@@ -441,6 +442,7 @@
 #define IRQ_S_GEXT        12
 #define IRQ_COP           12
 #define IRQ_LCOF          13
+#define IRQ_MSDEI         14
 #define IRQ_RAS_LOW_PRIO  35
 #define IRQ_RAS_HIGH_PRIO 43
 
@@ -2685,6 +2687,8 @@
 #define CSR_PMPADDR63 0x3ef
 #define CSR_MSECCFG 0x747
 #define CSR_MSDCFG 0x74E
+#define CSR_MSIDEIE 0x74f
+#define CSR_MSIDEIEH 0x75f
 #define CSR_TSELECT 0x7a0
 #define CSR_TDATA1 0x7a1
 #define CSR_TDATA2 0x7a2
@@ -2764,6 +2768,8 @@
 #define CSR_MIMPID 0xf13
 #define CSR_MHARTID 0xf14
 #define CSR_MCONFIGPTR 0xf15
+#define CSR_MSIDEIP 0xf4f
+#define CSR_MSIDEIPH 0xf5f
 #define CSR_MTOPI 0xfb0
 #define CSR_SIEH 0x114
 #define CSR_SIPH 0x154

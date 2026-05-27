@@ -346,6 +346,9 @@ word_t isa_query_intr() {
 #ifdef CONFIG_RVH
   const int priority [] = {
     IRQ_MEIP, IRQ_MSIP, IRQ_MTIP,
+#ifdef CONFIG_RV_SMSDIA
+    IRQ_MSDEI,
+#endif
     IRQ_SEIP, IRQ_SSIP, IRQ_STIP,
     IRQ_UEIP, IRQ_USIP, IRQ_UTIP,
     IRQ_SGEI,
@@ -355,17 +358,32 @@ word_t isa_query_intr() {
 #endif
   };
 #ifdef CONFIG_RV_SSCOFPMF
-  intr_num = 14;
+  intr_num = 14
+#ifdef CONFIG_RV_SMSDIA
+    + 1
+#endif
+    ;
 #else
-  intr_num = 13;
+  intr_num = 13
+#ifdef CONFIG_RV_SMSDIA
+    + 1
+#endif
+    ;
 #endif
 #else
   const int priority [] = {
     IRQ_MEIP, IRQ_MSIP, IRQ_MTIP,
+#ifdef CONFIG_RV_SMSDIA
+    IRQ_MSDEI,
+#endif
     IRQ_SEIP, IRQ_SSIP, IRQ_STIP,
     IRQ_UEIP, IRQ_USIP, IRQ_UTIP
   };
-  intr_num = 9;
+  intr_num = 9
+#ifdef CONFIG_RV_SMSDIA
+    + 1
+#endif
+    ;
 #endif // CONFIG_RVH
   int i;
 

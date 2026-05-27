@@ -7,6 +7,13 @@
 
 #define CSR_MMPT    0x382
 #define CSR_MSDCFG  0x74E
+#define CSR_MSIDEIE 0x74F
+#define CSR_MSIDEIP 0xF4F
+#define CSR_MIP     0x344
+#define CSR_MIE     0x304
+#define CSR_MIDELEG 0x303
+#define CSR_HIDELEG 0x603
+#define CSR_SIE     0x104
 
 #define MSTATUS_SPP (1ULL << 8)
 #define MSTATUS_SPIE (1ULL << 5)
@@ -36,6 +43,11 @@ static inline uint64_t mmpt_ppn(uint64_t val)  { return val & 0xFFFFFFFFFFFULL; 
 static inline uint64_t msdcfg_sidn(uint64_t val) { return val & 0x3F; }
 static inline uint64_t msdcfg_seda(uint64_t val) { return (val >> 6) & 1; }
 static inline uint64_t msdcfg_seta(uint64_t val) { return (val >> 7) & 1; }
+
+// MSDEI interrupt bit (bit 14 in mip/mie/sip/sie)
+#define IRQ_MSDEI  14
+#define MIP_MSDEIP (1ULL << IRQ_MSDEI)
+#define MIE_MSDEIE (1ULL << IRQ_MSDEI)
 
 // MPTE encodings
 #define MPTE_V (1ULL << 0)

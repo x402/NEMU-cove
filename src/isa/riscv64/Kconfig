@@ -630,6 +630,15 @@ config RV_SMMTT
     This option enables the Smmtt extension for supervisor domain
     memory protection via Machine Protection Tables (MPT).
 
+config RV_SMSDIA
+  depends on RV_SMMTT
+  bool "RISC-V Smsdia Supervisor Domain Interrupt Assignment Extension"
+  default n
+  help
+    This option enables the Smsdia extension for supervisor domain
+    interrupt assignment. Adds msideip/msideie CSRs and MSDEI interrupt
+    (bit 14 in mip/mie). Depends on Smsdid (provided by RV_SMMTT).
+
 config RVV_AGNOSTIC
   depends on RVV
   bool "Enable RVV agnostic policy"

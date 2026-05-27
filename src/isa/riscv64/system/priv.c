@@ -643,12 +643,15 @@ static inline word_t* csr_decode(uint32_t addr) {
 #define MIDELEG_WMASK_STI (1 << IRQ_S_TIMER)
 #define MIDELEG_WMASK_SEI (1 << IRQ_S_EXT)
 #define MIDELEG_WMASK_LCOFI MUXDEF(CONFIG_RV_SSCOFPMF, (1 << IRQ_LCOF), 0)
+#define MIDELEG_WMASK_MSDEI MUXDEF(CONFIG_RV_SMSDIA, (1 << IRQ_MSDEI), 0)
 #define MIDELEG_WMASK ( MIDELEG_WMASK_SSI | \
                         MIDELEG_WMASK_STI | \
                         MIDELEG_WMASK_SEI | \
-                        MIDELEG_WMASK_LCOFI)
+                        MIDELEG_WMASK_LCOFI | \
+                        MIDELEG_WMASK_MSDEI)
 
 #define MIE_MASK_BASE 0xaaa
+#define MIE_MASK_SMSDIA MUXDEF(CONFIG_RV_SMSDIA, (1 << IRQ_MSDEI), 0)
 #define MIP_MASK_BASE (1 << IRQ_S_SOFT)
 #ifdef CONFIG_RVH
 #define MIE_MASK_H ((1 << IRQ_VS_SOFT) | (1 << IRQ_VS_TIMER) | (1 << IRQ_VS_EXT) | (1 << IRQ_COP))
@@ -658,8 +661,8 @@ static inline word_t* csr_decode(uint32_t addr) {
 #define MIP_MASK_H 0
 #endif // CONFIG_RVH
 
-#define SIE_MASK_BASE (0x222 & mideleg->val)
-#define SIP_MASK ((0x222 | LCOFI) & mideleg->val)
+#define SIE_MASK_BASE ((0x222 MUXDEF(CONFIG_RV_SMSDIA, | (1 << IRQ_MSDEI),)) & mideleg->val)
+#define SIP_MASK ((0x222 | LCOFI MUXDEF(CONFIG_RV_SMSDIA, | (1 << IRQ_MSDEI),)) & mideleg->val)
 #define SIP_WMASK_S 0x2
 #define MTIE_MASK (1 << IRQ_M_TIMER)
 
@@ -1165,6 +1168,8 @@ inline word_t get_mip() {
   tmp |= (cpu.non_reg_interrupt_pending.platform_irp_meip | cpu.non_reg_interrupt_pending.from_aia_meip) << IRQ_M_EXT;
 
   IFDEF(CONFIG_RVH, tmp |= ((hgeip->val & hgeie->val) != 0) << IRQ_S_GEXT);
+
+  IFDEF(CONFIG_RV_SMSDIA, tmp |= ((msideip->val & msideie->val) != 0) << IRQ_MSDEI);
 
   return tmp;
 }
@@ -2316,7 +2321,7 @@ static void csr_write(uint32_t csrid, word_t src) {
 
     case CSR_MEDELEG: medeleg->val = mask_bitset(medeleg->val, MEDELEG_MASK, src); break;
     case CSR_MIDELEG: mideleg->val = mask_bitset(mideleg->val, MIDELEG_WMASK, src); break;
-    case CSR_MIE: mie->val = mask_bitset(mie->val, MIE_MASK_BASE | MIE_MASK_H | LCOFI, src); break;
+    case CSR_MIE: mie->val = mask_bitset(mie->val, MIE_MASK_BASE | MIE_MASK_H | MIE_MASK_SMSDIA | LCOFI, src); break;
     case CSR_MTVEC: set_tvec(dest, src); break;
     case CSR_MCOUNTEREN: mcounteren->val = mask_bitset(mcounteren->val, COUNTEREN_MASK, src); break;
 
@@ -2378,6 +2383,15 @@ static void csr_write(uint32_t csrid, word_t src) {
       break;
     }
 #endif // CONFIG_RV_SMMTT
+
+#ifdef CONFIG_RV_SMSDIA
+    case CSR_MSIDEIE:
+      msideie->val = src;
+      break;
+    case CSR_MSIDEIP:
+      // msideip is read-only, writes are ignored
+      break;
+#endif // CONFIG_RV_SMSDIA
 
 #ifdef CONFIG_RV_SMSTATEEN
     case CSR_MSTATEEN0: *dest = src & MSTATEEN0_WMASK; break;

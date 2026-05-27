@@ -61,6 +61,8 @@ enum {
   IRQ_MEIP,
   IRQ_SGEI,  // Supervisor guest external interrupt
   IRQ_LCOFI, // Local counter overflow interrupt
+  // IRQ_MSDEI (14) is defined as a macro in encoding.h, not in this enum,
+  // to avoid name conflict with the #define.
 };
 
 #define INTR_BIT (1ULL << 63)

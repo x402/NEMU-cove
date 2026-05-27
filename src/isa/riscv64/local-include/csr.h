@@ -581,6 +581,14 @@
 #define CSRS_M_SMMTT(f)
 #endif // CONFIG_RV_SMMTT
 
+#ifdef CONFIG_RV_SMSDIA
+#define CSRS_M_SMSDIA(f) \
+  f(msideie    , 0x74F) \
+  f(msideip    , 0xF4F)
+#else
+#define CSRS_M_SMSDIA(f)
+#endif // CONFIG_RV_SMSDIA
+
 /** ALL **/
 #define CSRS_M(f) \
   CSRS_M_INFOMATION(f) \
@@ -599,6 +607,7 @@
   CSRS_M_CSRIND_SUB(f) \
   CSRS_M_SMRNMI(f) \
   CSRS_M_SMMTT(f) \
+  CSRS_M_SMSDIA(f) \
   CSRS_DEBUG_MODE(f) \
   CSRS_M_CUSTOM(f)
 
@@ -732,9 +741,8 @@ CSR_STRUCT_START(mideleg)
   uint64_t vsei : 1;
   uint64_t mei  : 1;
   uint64_t sgei : 1;
-#ifdef CONFIG_RV_SSCOFPMF
   uint64_t lcofi : 1;
-#endif
+  IFDEF(CONFIG_RV_SMSDIA, uint64_t msdei : 1;)
 CSR_STRUCT_END(mideleg)
 
 CSR_STRUCT_START(mip)
@@ -752,6 +760,7 @@ CSR_STRUCT_START(mip)
   uint64_t meip  : 1;  // [11]
   uint64_t sgeip : 1;  // [12]
   uint64_t lcofip: 1;  // [13]
+  IFDEF(CONFIG_RV_SMSDIA, uint64_t msdeip : 1;) // [14]
 CSR_STRUCT_END(mip)
 
 CSR_STRUCT_START(mie)
@@ -768,9 +777,8 @@ CSR_STRUCT_START(mie)
   uint64_t vseie: 1;
   uint64_t meie : 1;
   uint64_t sgeie: 1;
-#ifdef CONFIG_RV_SSCOFPMF
   uint64_t lcofie : 1;
-#endif
+  IFDEF(CONFIG_RV_SMSDIA, uint64_t msdeie : 1;)
 CSR_STRUCT_END(mie)
 
 CSR_STRUCT_START(mcycle)
@@ -909,6 +917,16 @@ CSR_STRUCT_START(msdcfg)
   uint64_t pad0    : 32; // [63:32]
 CSR_STRUCT_END(msdcfg)
 #endif // CONFIG_RV_SMMTT
+
+#ifdef CONFIG_RV_SMSDIA
+CSR_STRUCT_START(msideip)
+  uint64_t sid  : 64; // Each bit i = 1 if external interrupts pending in SID i
+CSR_STRUCT_END(msideip)
+
+CSR_STRUCT_START(msideie)
+  uint64_t sid  : 64; // Each bit i = 1 if SID i is enabled to cause MSDEI
+CSR_STRUCT_END(msideie)
+#endif // CONFIG_RV_SMSDIA
 
 #ifdef CONFIG_RV_SMSTATEEN
   CSR_STRUCT_START(mstateen0)
